@@ -254,7 +254,7 @@ const stepMonth=(y,m,d)=>{let i=y*12+(m-1)+d;return{y:Math.floor(i/12),m:i%12+1}
 
 /* ---------- storage: Google Apps Script ---------- */
 // ใส่ URL ของ Web App (ลงท้ายด้วย /exec) ไว้ตรงนี้ได้เลย หรือเว้นว่างไว้แล้วกรอกในแอปตอนเปิดครั้งแรก
-const API_URL='';
+const API_URL='https://script.google.com/macros/s/AKfycbwe0VnvQpL1tC7V1e7mAaTJrQWxjE_xb1KHlEb59aPss-_y6mNifg8mMzgvWoLCwJAb/exec';
 const LS={docs:'ledger-docs',pend:'ledger-pending',api:'ledger-api',pinh:'ledger-pinh',hideInstall:'ledger-hide-install'};
 const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
