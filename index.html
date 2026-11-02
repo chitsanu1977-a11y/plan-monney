@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>รายได้และค่าใช้จ่าย</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="รายได้">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDEFF4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121420" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDEFF4; --surface:#FFFFFF; --surface-2:#F5F6FA; --ink:#1C1F2E; --muted:#5F6478; --line:#D8DBE4;
+  --day:#D08A14; --day-soft:#F6E4C1; --night:#3D43A6; --night-soft:#DDDFF6; --other:#8B8FA3;
+  --due:#B53D35; --due-soft:#F8E1DE; --ok:#2A8150; --ok-soft:#DCF0E3;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121420; --surface:#1B1E2C; --surface-2:#22263A; --ink:#E9EBF3; --muted:#9CA1B6; --line:#2E3246;
+    --day:#EFAE3F; --day-soft:#3A3020; --night:#8E94F2; --night-soft:#2A2D52; --other:#767B92;
+    --due:#F27E73; --due-soft:#3D2423; --ok:#62C58E; --ok-soft:#1E3628;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121420; --surface:#1B1E2C; --surface-2:#22263A; --ink:#E9EBF3; --muted:#9CA1B6; --line:#2E3246;
+  --day:#EFAE3F; --day-soft:#3A3020; --night:#8E94F2; --night-soft:#2A2D52; --other:#767B92;
+  --due:#F27E73; --due-soft:#3D2423; --ok:#62C58E; --ok-soft:#1E3628;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Anuphan","Noto Sans Thai","Leelawadee UI",Tahoma,sans-serif;font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
+.num{font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--night);outline-offset:2px}
+a{color:inherit}
+
+header.top{max-width:720px;margin:0 auto;padding:18px 16px 2px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-size:1.15rem;margin:0;font-weight:700;letter-spacing:-.01em}
+.sync{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.sync.err{color:var(--due)}
+main{max-width:720px;margin:0 auto;padding:10px 16px 110px}
+h2{font-size:1.02rem;margin:30px 0 10px;font-weight:600}
+h2 small{font-weight:400;color:var(--muted);font-size:.85rem;margin-left:6px}
+p{margin:0}
+.muted{color:var(--muted)}
+.banner{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:.9rem;margin:6px 0 10px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20}
+nav.tabs .in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 4px 9px;color:var(--muted);text-decoration:none;font-size:.78rem;font-weight:500;position:relative}
+nav.tabs a svg{width:22px;height:22px}
+nav.tabs a[aria-current="page"]{color:var(--ink)}
+nav.tabs a[aria-current="page"]::before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,var(--day) 50%,var(--night) 50%)}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 14px;cursor:pointer;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.add{border-style:dashed;color:var(--muted)}
+
+/* overview */
+.duestrip{display:flex;justify-content:space-between;align-items:center;gap:10px;text-decoration:none;background:var(--due-soft);border-radius:8px;padding:10px 12px;margin:8px 0 2px;font-size:.92rem}
+.duestrip.done{background:var(--ok-soft)}
+.duestrip b{white-space:nowrap}
+.yeartotal{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin:18px 0 8px}
+.yeartotal .t{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.lg{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:baseline}
+.lg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.lg.day i{background:var(--day)} .lg.night i{background:var(--night)} .lg.other i{background:var(--other)}
+.lg b{grid-column:2;font-size:1.1rem}
+.lg small{grid-column:2;color:var(--muted);font-size:.8rem}
+.note{font-size:.88rem;color:var(--muted);margin:4px 0 14px}
+
+.months{display:grid;gap:3px}
+.mrow{display:grid;grid-template-columns:2.9em 1fr 5.4em;align-items:center;gap:10px;padding:5px 6px;margin:0 -6px;background:none;border:0;border-radius:6px;text-align:left;cursor:pointer;width:calc(100% + 12px)}
+.mrow:hover{background:var(--surface)}
+.mrow .mn{font-size:.9rem;color:var(--muted)}
+.mrow.now .mn{color:var(--ink);font-weight:600}
+.bar{height:20px;display:flex;border-radius:3px;overflow:hidden;line-height:1}
+.seg{height:100%}
+.seg.day{background:var(--day)} .seg.night{background:var(--night)} .seg.other{background:var(--other)}
+.bar.nodata{border:1px dashed var(--line);align-items:center;padding-left:8px;font-size:.72rem;color:var(--muted);white-space:nowrap}
+.mrow .tot{text-align:right;font-size:.92rem}
+
+.chart{background:var(--surface);border-radius:10px;padding:12px 10px 6px}
+.chart svg{display:block;width:100%;height:auto}
+.chart .keys{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;padding:2px 6px 6px}
+.chart .keys span{display:inline-flex;align-items:center;gap:6px}
+.chart .keys i{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+.tbl-wrap{overflow-x:auto;background:var(--surface);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:8px 10px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-weight:500;color:var(--muted);font-size:.8rem;border-bottom:1px solid var(--line)}
+tbody tr+tr td{border-top:1px solid var(--line)}
+td.pos{color:var(--ok)} td.neg{color:var(--due)}
+
+/* income */
+.list{background:var(--surface);border-radius:10px;overflow:hidden}
+.irow{border-top:1px solid var(--line)}
+.irow:first-child{border-top:0}
+.ihead{display:grid;grid-template-columns:4.6em 1fr 1fr 1fr 1.2em;gap:8px;align-items:center;width:100%;padding:11px 12px;background:none;border:0;cursor:pointer;text-align:right}
+.ihead .mn{text-align:left;font-weight:500}
+.ihead .c-day{color:var(--day)} .ihead .c-night{color:var(--night)}
+.ihead .tot{font-weight:600}
+.ihead .chev{color:var(--muted);transition:transform .15s}
+.irow.open .chev{transform:rotate(90deg)}
+.irow.now .mn::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--night);margin-left:6px;vertical-align:middle}
+.ihead.cols{cursor:default;font-size:.78rem;color:var(--muted);padding-top:9px;padding-bottom:7px;background:var(--surface-2)}
+.ihead.foot{cursor:default;background:var(--surface-2);font-weight:600}
+.editor{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:2px 12px 14px;background:var(--surface)}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:.78rem;color:var(--muted)}
+.in{width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:6px;padding:7px 9px;text-align:right;min-width:0}
+.in:focus{border-color:var(--night);outline:none;background:var(--surface)}
+.field.day label{color:var(--day)} .field.night label{color:var(--night)}
+@media (max-width:520px){.editor{grid-template-columns:1fr 1fr}.ihead{grid-template-columns:3.6em 1fr 1fr 1fr 1em;gap:6px;font-size:.92rem}}
+
+/* bills */
+.mnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 12px}
+.mnav h2{margin:0;font-size:1.2rem;text-align:center;flex:1}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;width:40px;height:40px;cursor:pointer;display:grid;place-items:center;flex:none}
+.iconbtn svg{width:18px;height:18px}
+.bsum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.bsum div{display:flex;flex-direction:column}
+.bsum small{color:var(--muted);font-size:.8rem}
+.bsum b{font-size:1.08rem}
+.bsum .left b{color:var(--due)}
+.bsum .left.zero b{color:var(--ok)}
+.prog{height:6px;background:var(--due-soft);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.prog span{display:block;height:100%;background:var(--ok)}
+.bills{list-style:none;margin:0;padding:0;background:var(--surface);border-radius:10px;overflow:hidden}
+.bill{display:grid;grid-template-columns:38px 1fr 7.5em 30px;gap:8px;align-items:center;padding:7px 10px;border-top:1px solid var(--line)}
+.bill:first-child{border-top:0}
+.chk{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:none;cursor:pointer;display:grid;place-items:center;padding:0;color:transparent}
+.chk svg{width:16px;height:16px}
+.bill.paid .chk{background:var(--ok);border-color:var(--ok);color:#fff}
+.bill.part .chk{border-color:var(--ok);border-style:dashed}
+.bill .name{border:0;background:none;padding:6px 4px;min-width:0;border-radius:6px}
+.bill .name:focus{background:var(--surface-2);outline:none}
+.bill.paid .name,.bill.paid .amt{color:var(--muted)}
+.bill.paid .name{text-decoration:line-through;text-decoration-color:var(--muted)}
+.bill.blank .name{color:var(--muted)}
+.del{border:0;background:none;color:var(--muted);cursor:pointer;width:30px;height:30px;border-radius:6px;font-size:1.2rem;line-height:1}
+.del:hover{color:var(--due);background:var(--due-soft)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:500}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.quiet{border-color:transparent;background:none;color:var(--muted)}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;justify-content:space-between}
+.empty{background:var(--surface);border-radius:10px;padding:22px 16px;text-align:center}
+.empty p{margin-bottom:14px}
+.empty .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* gigs */
+.cars{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.car{background:var(--surface);border-radius:10px;padding:12px}
+.carhead{display:grid;grid-template-columns:1fr 30px;align-items:center;gap:6px;margin:-4px 0 6px}
+.car .name{border:0;background:none;font-weight:600;padding:4px 6px;margin-left:-6px;border-radius:6px;min-width:0;width:100%}
+.car .name:focus{background:var(--surface-2);outline:none}
+.perkm{font-size:.82rem;color:var(--muted);margin-top:8px}
+.car .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.venue{display:grid;grid-template-columns:6.2em 1fr 30px;gap:6px 8px;padding:10px 10px;border-top:1px solid var(--line);align-items:center}
+.venue:first-child{border-top:0}
+.venue .l2{grid-column:1 / -1;display:grid;grid-template-columns:7.5em 5.5em 1fr;gap:8px;align-items:center}
+.venue .cost{font-size:.82rem;color:var(--muted);text-align:right;line-height:1.35}
+.venue .in{text-align:left}
+.venue .in.km{text-align:right}
+.wk{display:grid;grid-template-columns:1fr auto auto;gap:4px 16px;background:var(--surface);border-radius:10px;padding:12px;margin-top:10px;font-size:.92rem}
+.wk .h{color:var(--muted);font-size:.8rem}
+.wk b{text-align:right}
+@media (max-width:520px){.cars{grid-template-columns:1fr}}
+
+.hright{display:flex;align-items:center;gap:6px}
+.lockbtn{border:0;background:none;color:var(--muted);width:34px;height:34px;border-radius:8px;cursor:pointer;display:grid;place-items:center}
+.lockbtn svg{width:20px;height:20px}
+.lockbtn:hover{background:var(--surface)}
+#gate{display:none}
+body.gated #gate{display:flex;min-height:100vh;min-height:100dvh;align-items:center;justify-content:center;padding:24px 16px}
+body.gated header.top,body.gated main,body.gated nav.tabs{display:none}
+.gatebox{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.gatebox img{align-self:center;border-radius:14px}
+.gatebox h2{margin:4px 0 0;font-size:1.25rem}
+.gatebox .field{text-align:left}
+.gatebox .field span{font-size:.82rem;color:var(--muted)}
+.gatebox .in{text-align:left;padding:11px 12px;font-size:1rem}
+.gatebox .in.pin{text-align:center;letter-spacing:.4em;font-size:1.3rem}
+.gatebox .btn{padding:12px}
+.gateerr{color:var(--due);font-size:.9rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.banner.install{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.banner.install span{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn.sm{padding:5px 12px}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:.9rem;z-index:30;max-width:90vw}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>รายได้และค่าใช้จ่าย</h1>
+  <span class="hright"><span class="sync" id="sync"></span><button class="lockbtn" id="lockBtn" aria-label="ล็อกแอป"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></button></span>
+</header>
+<div id="gate"></div>
+<main id="main"><p class="muted">กำลังโหลดข้อมูล…</p></main>
+<nav class="tabs" aria-label="เมนูหลัก"><div class="in">
+  <a href="#overview" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h11M4 12h16M4 17h8"/></svg>ภาพรวม</a>
+  <a href="#income" data-v="income"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 14.2c.4 1 1.3 1.5 2.5 1.5 1.5 0 2.5-.7 2.5-1.8 0-2.6-5-1.3-5-3.9 0-1 1-1.7 2.4-1.7 1.1 0 2 .5 2.4 1.3"/></svg>รายได้</a>
+  <a href="#bills" data-v="bills"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12v17l-2.4-1.5-2.4 1.5-2.4-1.5-2.4 1.5L6 20.5z"/><path d="M9 8.5h6M9 12h6M9 15.5h3.5"/></svg>ค่าใช้จ่าย</a>
+  <a href="#gigs" data-v="gigs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17.5V5.5l10-2v12"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>ที่เล่นดนตรี</a>
+</div></nav>
+
+<script>
+document.getElementById('lockBtn').onclick=()=>lockApp();
+const TH_M=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TH_MS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const NOW=new Date(), CUR_Y=NOW.getFullYear()+543, CUR_M=NOW.getMonth()+1;
+const VIEWS=['overview','income','bills','gigs'];
+const S={docs:{},view:'overview',year:CUR_Y,billKey:null,openMonth:null,loaded:false,slow:false,error:null,backend:null,needRender:false};
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{if(v===null||v===undefined||v==='')return 0;const n=typeof v==='number'?v:parseFloat(String(v).replace(/,/g,''));return isFinite(n)?n:0};
+const parseIn=v=>{const t=String(v).replace(/[,\s฿]/g,'');if(t==='')return null;const n=parseFloat(t);return isFinite(n)?Math.round(n*100)/100:null};
+const fmt=(n,d=0)=>num(n).toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
+const raw=v=>v===null||v===undefined?'':String(v);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+/* ---------- data helpers ---------- */
+const incKey=y=>'inc-'+y;
+const years=()=>Object.keys(S.docs).filter(k=>k.startsWith('inc-')).map(k=>+k.slice(4)).sort((a,b)=>a-b);
+const monthsOf=y=>{const d=S.docs[incKey(y)];return d&&Array.isArray(d.months)?d.months:null};
+const hasData=m=>!!m&&['salary','fee','tip','other'].some(k=>m[k]!==null&&m[k]!==undefined&&m[k]!=='');
+const mTotal=m=>m?num(m.salary)+num(m.fee)+num(m.tip)+num(m.other):0;
+const emptyMonth=()=>({salary:null,fee:null,tip:null,other:null});
+const billKey=(y,m)=>`exp-${y}-${String(m).padStart(2,'0')}`;
+const billKeys=()=>Object.keys(S.docs).filter(k=>k.startsWith('exp-')).sort();
+const parseBK=k=>{const p=k.split('-');return{y:+p[1],m:+p[2]}};
+const billSum=d=>{let t=0,p=0;(d&&d.items||[]).forEach(i=>{const a=num(i.amount);t+=a;p+=Math.min(num(i.paid),a)});return{total:t,paid:p,left:Math.max(0,Math.round((t-p)*100)/100)}};
+const stepMonth=(y,m,d)=>{let i=y*12+(m-1)+d;return{y:Math.floor(i/12),m:i%12+1}};
+
+/* ---------- storage: Google Apps Script ---------- */
+// ใส่ URL ของ Web App (ลงท้ายด้วย /exec) ไว้ตรงนี้ได้เลย หรือเว้นว่างไว้แล้วกรอกในแอปตอนเปิดครั้งแรก
+const API_URL='';
+const LS={docs:'ledger-docs',pend:'ledger-pending',api:'ledger-api',pinh:'ledger-pinh',hideInstall:'ledger-hide-install'};
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const Store={api:null,pin:null,pending:new Set(),timers:{},busy:false,lastPull:0,
+  loadCache(){
+    try{S.docs=JSON.parse(lsGet(LS.docs,'{}'))}catch(e){S.docs={}}
+    try{this.pending=new Set(JSON.parse(lsGet(LS.pend,'[]')))}catch(e){this.pending=new Set()}
+  },
+  persist(){lsSet(LS.docs,JSON.stringify(S.docs));lsSet(LS.pend,JSON.stringify([...this.pending]))},
+  async call(params,pin){
+    const u=new URL(this.api);
+    Object.entries({...params,pin:pin??this.pin,t:Date.now()}).forEach(([k,v])=>u.searchParams.set(k,v));
+    const r=await fetch(u.toString(),{method:'GET',redirect:'follow',cache:'no-store'});
+    let j;try{j=await r.json()}catch(e){throw Object.assign(new Error('bad'),{code:'bad_response'})}
+    if(!j.ok)throw Object.assign(new Error(j.error||'error'),{code:j.error||'error'});
+    return j;
+  },
+  async pull(force){
+    if(!navigator.onLine){setSync('offline');return}
+    if(!force&&Date.now()-this.lastPull<20000)return;
+    this.lastPull=Date.now();
+    try{
+      setSync('syncing');
+      const j=await this.call({action:'list'});
+      const next=j.docs||{};
+      this.pending.forEach(id=>{if(S.docs[id]===undefined)delete next[id];else next[id]=S.docs[id]});
+      S.docs=next;S.error=null;this.persist();
+      setSync(this.pending.size?'pending':'saved');
+      softRender();this.flushAll();
+    }catch(e){if(e.code==='pin')return lockApp('PIN ถูกเปลี่ยน ใส่ PIN ใหม่อีกครั้ง');S.error=e.code;setSync('error');softRender()}
+  },
+  save(id,delay=700){
+    this.pending.add(id);this.persist();setSync('pending');
+    clearTimeout(this.timers[id]);
+    this.timers[id]=setTimeout(()=>{this.timers[id]=null;this.flushAll()},delay);
+  },
+  saveNow(id){this.save(id,0)},
+  remove(id){delete S.docs[id];this.save(id,0)},
+  async flushAll(){
+    if(this.busy||!this.pending.size)return;
+    if(!navigator.onLine){setSync('offline');return}
+    this.busy=true;setSync('saving');let ok=true;
+    try{
+      for(const id of [...this.pending]){
+        if(this.timers[id])continue;
+        const d=S.docs[id],snap=JSON.stringify(d===undefined?null:d);
+        if(d===undefined)await this.call({action:'delete',id});
+        else await this.call({action:'set',id,data:snap});
+        const now=JSON.stringify(S.docs[id]===undefined?null:S.docs[id]);
+        if(now===snap&&!this.timers[id])this.pending.delete(id);
+        this.persist();
+      }
+      S.error=null;
+    }catch(e){ok=false;if(e.code==='pin'){this.busy=false;return lockApp('PIN ถูกเปลี่ยน ใส่ PIN ใหม่อีกครั้ง')}setSync(navigator.onLine?'error':'offline')}
+    this.busy=false;
+    if(ok){
+      if([...this.pending].some(id=>!this.timers[id]))setTimeout(()=>this.flushAll(),300);
+      else setSync(this.pending.size?'pending':'saved');
+    }
+  }
+};
+function setSync(state){
+  const el=$('#sync');el.classList.remove('err');
+  el.textContent={pending:'รอบันทึก…',saving:'กำลังบันทึก…',syncing:'กำลังซิงก์…',saved:'บันทึกแล้ว',offline:Store.pending.size?'ออฟไลน์ รอบันทึก':'ออฟไลน์',error:'บันทึกไม่สำเร็จ'}[state]||'';
+  if(state==='error')el.classList.add('err');
+}
+window.addEventListener('online',()=>{Store.flushAll();Store.pull(true);softRender()});
+window.addEventListener('offline',()=>{setSync('offline');softRender()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Store.pin)Store.pull()});
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+
+/* ---------- gate: setup & PIN ---------- */
+async function sha(s){
+  try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('ledger:'+s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+  catch(e){return null}
+}
+function showGate(html){
+  document.body.classList.add('gated');
+  $('#gate').innerHTML=html;
+  const f=$('#gate input');if(f)f.focus();
+}
+function hideGate(){document.body.classList.remove('gated');$('#gate').innerHTML=''}
+function showSetup(msg,url){
+  showGate(`<form class="gatebox" id="setupForm"><img src="icons/icon-192.png" alt="" width="64" height="64"><h2>เชื่อมต่อ Google Sheets</h2>
+  <p class="muted">วาง URL ของ Apps Script Web App ที่ลงท้ายด้วย /exec และใส่ PIN ที่ตั้งไว้ใน Code.gs</p>
+  <label class="field"><span>URL ของ Web App</span><input class="in" name="url" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(url??lsGet(LS.api,''))}" required></label>
+  <label class="field"><span>PIN</span><input class="in pin" name="pin" type="password" inputmode="numeric" autocomplete="off" required></label>
+  ${msg?`<p class="gateerr">${esc(msg)}</p>`:''}
+  <button class="btn primary" type="submit">เชื่อมต่อ</button></form>`);
+  $('#setupForm').onsubmit=async e=>{
+    e.preventDefault();const f=e.target,url=f.url.value.trim(),pin=f.pin.value.trim();
+    if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(url))return showSetup('URL ต้องขึ้นต้นด้วย https://script.google.com/',url);
+    Store.api=url;f.querySelector('button').disabled=true;f.querySelector('button').textContent='กำลังตรวจสอบ…';
+    try{await Store.call({action:'ping'},pin);lsSet(LS.api,url);await unlocked(pin)}
+    catch(err){showSetup(err.code==='pin'?'PIN ไม่ถูกต้อง':'เชื่อมต่อไม่ได้ ตรวจสอบ URL และตั้ง Who has access เป็น Anyone',url)}
+  };
+}
+function lockApp(msg){
+  Store.pin=null;try{sessionStorage.removeItem('ledger-pin')}catch(e){}
+  showGate(`<form class="gatebox" id="pinForm"><img src="icons/icon-192.png" alt="" width="64" height="64"><h2>ใส่ PIN</h2>
+  <label class="field"><span class="sr">PIN</span><input class="in pin" name="pin" type="password" inputmode="numeric" autocomplete="off" required></label>
+  ${msg?`<p class="gateerr">${esc(msg)}</p>`:''}
+  <button class="btn primary" type="submit">เปิดแอป</button>
+  ${API_URL?'':'<button class="btn quiet" type="button" id="chgApi">เปลี่ยน URL ของ Google Sheets</button>'}</form>`);
+  const ch=$('#chgApi');if(ch)ch.onclick=()=>showSetup();
+  $('#pinForm').onsubmit=async e=>{
+    e.preventDefault();const pin=e.target.pin.value.trim(),btn=e.target.querySelector('[type=submit]');
+    btn.disabled=true;btn.textContent='กำลังตรวจสอบ…';
+    if(navigator.onLine){
+      try{await Store.call({action:'ping'},pin);return unlocked(pin)}
+      catch(err){if(err.code==='pin')return lockApp('PIN ไม่ถูกต้อง')}
+    }
+    const h=await sha(pin);
+    if(h&&h===lsGet(LS.pinh,''))return unlocked(pin,true);
+    lockApp(navigator.onLine?'เชื่อมต่อ Google Sheets ไม่ได้ ลองอีกครั้ง':'ออฟไลน์อยู่ และ PIN ไม่ตรงกับที่เคยใช้ในเครื่องนี้');
+  };
+}
+async function unlocked(pin,offline){
+  Store.pin=pin;try{sessionStorage.setItem('ledger-pin',pin)}catch(e){}
+  const h=await sha(pin);if(h&&!offline)lsSet(LS.pinh,h);
+  hideGate();Store.loadCache();S.loaded=true;render();
+  if(Store.pending.size)setSync(navigator.onLine?'pending':'offline');
+  Store.pull(true);
+}
+
+/* ---------- install ---------- */
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const UA=navigator.userAgent||'';
+const inLine=/\bLine\//i.test(UA);
+const isIOS=/iPhone|iPad|iPod/.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let installEvt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;softRender()});
+window.addEventListener('appinstalled',()=>{installEvt=null;lsSet(LS.hideInstall,'1');softRender()});
+function installBanner(){
+  if(isStandalone()||lsGet(LS.hideInstall,'')==='1')return '';
+  let body;
+  if(inLine){const u=new URL(location.href);u.searchParams.set('openExternalBrowser','1');body=`เปิดใน LINE ติดตั้งแอปไม่ได้ <a href="${esc(u.toString())}">เปิดในเบราว์เซอร์</a> แล้วค่อยติดตั้ง`}
+  else if(installEvt)body=`ติดตั้งแอปไว้ในมือถือ เปิดได้จากหน้าจอหลัก <button class="btn primary sm" data-act="install">ติดตั้ง</button>`;
+  else if(isIOS)body='ติดตั้งแอป: กดปุ่มแชร์ใน Safari แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”';
+  else return '';
+  return `<div class="banner install"><span>${body}</span><button class="del" data-act="hideinstall" aria-label="ซ่อน">×</button></div>`;
+}
+if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+
+/* ---------- render ---------- */
+function softRender(){
+  const a=document.activeElement;
+  if(a&&a.matches&&a.matches('main input, main select')){S.needRender=true;return}
+  render();
+}
+let ptr=false;
+document.addEventListener('pointerdown',()=>{ptr=true},true);
+document.addEventListener('pointerup',()=>{ptr=false;setTimeout(()=>{if(S.needRender)softRender()},0)},true);
+document.addEventListener('pointercancel',()=>{ptr=false},true);
+document.addEventListener('focusout',()=>setTimeout(()=>{if(S.needRender&&!ptr)softRender()},0));
+
+function render(){
+  S.needRender=false;
+  document.querySelectorAll('nav.tabs a').forEach(a=>{if(a.dataset.v===S.view)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+  const m=$('#main');
+  if(!S.loaded){m.innerHTML=S.slow?'<p class="empty">ยังดึงข้อมูลไม่ได้ ตรวจสอบอินเทอร์เน็ต แล้วรอสักครู่ หน้านี้จะโหลดต่อเอง</p>':'<p class="muted">กำลังโหลดข้อมูล…</p>';return}
+  let pre='';
+  if(!navigator.onLine)pre+='<p class="banner">ออฟไลน์อยู่ แก้ไขได้ตามปกติ ระบบจะบันทึกขึ้น Google Sheets ให้เมื่อกลับมาออนไลน์</p>';
+  else if(S.error)pre+='<p class="banner">เชื่อมต่อ Google Sheets ไม่ได้ ข้อมูลที่แก้ยังเก็บไว้ในเครื่อง จะลองบันทึกอีกครั้งเมื่อเปิดแอปใหม่</p>';
+  if(S.view==='overview')pre+=installBanner();
+  const ys=years();
+  if(ys.length&&!ys.includes(S.year))S.year=ys.includes(CUR_Y)?CUR_Y:ys[ys.length-1];
+  m.innerHTML=pre+({overview:vOverview,income:vIncome,bills:vBills,gigs:vGigs})[S.view]();
+}
+
+function yearChips(withAdd){
+  return `<div class="chips" role="group" aria-label="เลือกปี">${years().map(y=>`<button class="chip" data-act="year" data-y="${y}" aria-pressed="${y===S.year}">${y}</button>`).join('')}${withAdd?'<button class="chip add" data-act="addyear">+ เพิ่มปี</button>':''}</div>`;
+}
+
+/* ---------- overview ---------- */
+function vOverview(){
+  const ys=years();
+  let out='';
+  const bk=billKey(CUR_Y,CUR_M),bd=S.docs[bk];
+  if(bd){
+    const s=billSum(bd),n=bd.items.filter(i=>num(i.amount)>0&&num(i.paid)<num(i.amount)).length;
+    out+=s.left>0
+      ?`<a class="duestrip" href="#bills" data-act="gobill" data-k="${bk}"><span>ค่าใช้จ่าย ${TH_MS[CUR_M-1]} ยังค้าง ${n} รายการ</span><b class="num">฿${fmt(s.left,2)}</b></a>`
+      :`<a class="duestrip done" href="#bills" data-act="gobill" data-k="${bk}"><span>ค่าใช้จ่าย ${TH_MS[CUR_M-1]} จ่ายครบแล้ว</span><b class="num">฿${fmt(s.total,2)}</b></a>`;
+  }
+  if(!ys.length)return out+`<div class="empty" style="margin-top:16px"><p>ยังไม่มีข้อมูลรายได้</p><div class="btns"><button class="btn primary" data-act="addyear">เริ่มปี ${CUR_Y}</button></div></div>`;
+  const y=S.year,ms=monthsOf(y)||[];
+  let sal=0,fee=0,tip=0,oth=0,filled=0;
+  ms.forEach(m=>{if(hasData(m)){filled++;sal+=num(m.salary);fee+=num(m.fee);tip+=num(m.tip);oth+=num(m.other)}});
+  const total=sal+fee+tip+oth;
+  const prev=monthsOf(y-1);let prevSame=0;
+  if(prev)ms.forEach((m,i)=>{if(hasData(m))prevSame+=mTotal(prev[i])});
+  const diff=prevSame?(total-prevSame)/prevSame*100:null;
+  let max=1;ys.forEach(yy=>(monthsOf(yy)||[]).forEach(m=>{max=Math.max(max,mTotal(m))}));
+  const pct=v=>total?Math.round(v/total*100):0;
+
+  out+=`<div class="yeartotal">${yearChips(false)}<span class="t num">฿${fmt(total)}</span></div>
+  <div class="legend">
+    <div class="lg day"><i></i><span>งานประจำ ${pct(sal)}%</span><b class="num">${fmt(sal)}</b><small>เงินเดือน</small></div>
+    <div class="lg night"><i></i><span>เล่นดนตรี ${pct(fee+tip)}%</span><b class="num">${fmt(fee+tip)}</b><small class="num">ค่าตัว ${fmt(fee)} ทิป ${fmt(tip)}</small></div>
+    ${oth?`<div class="lg other"><i></i><span>อื่นๆ</span><b class="num">${fmt(oth)}</b></div>`:''}
+  </div>
+  <p class="note">${filled?`กรอกแล้ว ${filled} เดือน เฉลี่ยเดือนละ ฿${fmt(total/filled)}`:'ยังไม่ได้กรอกรายได้ของปีนี้'}${diff!==null?` ${diff>=0?'มากกว่า':'น้อยกว่า'}ช่วงเดียวกันของปี ${y-1} อยู่ ${fmt(Math.abs(diff),1)}%`:''}</p>
+  <div class="months">`;
+  for(let i=0;i<12;i++){
+    const m=ms[i],now=y===CUR_Y&&i+1===CUR_M?' now':'';
+    if(!hasData(m)){out+=`<button class="mrow${now}" data-act="gomonth" data-m="${i}"><span class="mn">${TH_MS[i]}</span><span class="bar nodata">ยังไม่ได้กรอก</span><span class="tot muted">–</span></button>`;continue}
+    const w=v=>(num(v)/max*100).toFixed(2)+'%';
+    out+=`<button class="mrow${now}" data-act="gomonth" data-m="${i}" aria-label="${TH_M[i]} รวม ${fmt(mTotal(m))} บาท"><span class="mn">${TH_MS[i]}</span><span class="bar"><span class="seg day" style="width:${w(m.salary)}"></span><span class="seg night" style="width:${w(num(m.fee)+num(m.tip))}"></span><span class="seg other" style="width:${w(m.other)}"></span></span><span class="tot num">${fmt(mTotal(m))}</span></button>`;
+  }
+  out+='</div>';
+
+  const cmp=ys.slice(-3);
+  if(cmp.length>1)out+=`<h2>เทียบรายได้แต่ละปี</h2>${lineChart(cmp)}`;
+
+  // net after fixed bills
+  let rows='';
+  for(let i=0;i<12;i++){
+    const m=ms[i],bd2=S.docs[billKey(y,i+1)];
+    if(!hasData(m)||!bd2)continue;
+    const inc=mTotal(m),ex=billSum(bd2).total,net=inc-ex;
+    rows+=`<tr><td>${TH_MS[i]}</td><td class="num">${fmt(inc)}</td><td class="num">${fmt(ex)}</td><td class="num ${net>=0?'pos':'neg'}">${net<0?'−':''}${fmt(Math.abs(net))}</td></tr>`;
+  }
+  if(rows)out+=`<h2>เหลือหลังหักค่าใช้จ่ายประจำ<small>ปี ${y}</small></h2><div class="tbl-wrap"><table><thead><tr><th>เดือน</th><th>รายได้</th><th>ค่าใช้จ่าย</th><th>คงเหลือ</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return out;
+}
+
+function lineChart(ys){
+  const W=420,H=230,L=34,R=8,T=10,B=24,iw=W-L-R,ih=H-T-B;
+  let max=0;ys.forEach(y=>(monthsOf(y)||[]).forEach(m=>{max=Math.max(max,mTotal(m))}));
+  const step=20000;max=Math.ceil(max/step)*step||step;
+  const x=i=>L+iw*i/11,yy=v=>T+ih-(v/max)*ih;
+  const colors=['var(--other)','var(--day)','var(--night)'].slice(-ys.length);
+  let g='';
+  for(let v=0;v<=max;v+=step){g+=`<line x1="${L}" x2="${W-R}" y1="${yy(v)}" y2="${yy(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-8}" y="${yy(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v/1000}k</text>`}
+  TH_MS.forEach((n,i)=>{g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${n}</text>`});
+  ys.forEach((y,si)=>{
+    const ms=monthsOf(y)||[];let d='',pen=false,dots='';
+    for(let i=0;i<12;i++){
+      if(hasData(ms[i])){const px=x(i).toFixed(1),py=yy(mTotal(ms[i])).toFixed(1);d+=(pen?'L':'M')+px+' '+py;pen=true;if(si===ys.length-1)dots+=`<circle cx="${px}" cy="${py}" r="3" fill="${colors[si]}"/>`}
+      else pen=false;
+    }
+    g+=`<path d="${d}" fill="none" stroke="${colors[si]}" stroke-width="${si===ys.length-1?2.6:1.8}" stroke-linejoin="round" stroke-linecap="round"/>${dots}`;
+  });
+  return `<div class="chart"><div class="keys">${ys.map((y,i)=>`<span><i style="background:${colors[i]}"></i>${y}</span>`).join('')}</div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟเทียบรายได้รายเดือนของปี ${ys.join(', ')}">${g}</svg></div>`;
+}
+
+/* ---------- income ---------- */
+function vIncome(){
+  const ys=years();
+  if(!ys.length)return `<div class="empty" style="margin-top:16px"><p>ยังไม่มีข้อมูลรายได้</p><div class="btns"><button class="btn primary" data-act="addyear">เริ่มปี ${CUR_Y}</button></div></div>`;
+  const y=S.year,ms=monthsOf(y)||[];
+  let out=`<div style="margin:14px 0 12px">${yearChips(true)}</div><div class="list">
+  <div class="ihead cols"><span class="mn">เดือน</span><span>งานประจำ</span><span>ดนตรี</span><span>รวม</span><span></span></div>`;
+  let ts=0,tm=0,tt=0;
+  for(let i=0;i<12;i++){
+    const m=ms[i]||emptyMonth(),open=S.openMonth===i,now=y===CUR_Y&&i+1===CUR_M?' now':'';
+    const has=hasData(m),mu=num(m.fee)+num(m.tip);
+    ts+=num(m.salary);tm+=mu;tt+=mTotal(m);
+    out+=`<div class="irow${open?' open':''}${now}"><button class="ihead" data-act="toggle" data-m="${i}" aria-expanded="${open}"><span class="mn">${TH_MS[i]}</span><span class="num c-day">${has&&m.salary!=null?fmt(m.salary):'–'}</span><span class="num c-night">${has&&mu?fmt(mu):'–'}</span><span class="num tot">${has?fmt(mTotal(m)):'–'}</span><span class="chev" aria-hidden="true">›</span></button>`;
+    if(open){
+      const f=(k,lab,cls)=>`<div class="field ${cls}"><label for="f-${k}">${lab}</label><input id="f-${k}" class="in num" inputmode="decimal" autocomplete="off" data-act="inc" data-m="${i}" data-f="${k}" value="${esc(raw(m[k]))}" placeholder="0"></div>`;
+      out+=`<div class="editor">${f('salary','เงินเดือน','day')}${f('fee','ค่าตัว','night')}${f('tip','ทิป','night')}${f('other','อื่นๆ','')}</div>`;
+    }
+    out+='</div>';
+  }
+  out+=`<div class="irow"><div class="ihead foot"><span class="mn">รวม</span><span class="num">${fmt(ts)}</span><span class="num">${fmt(tm)}</span><span class="num">${fmt(tt)}</span><span></span></div></div></div>
+  <p class="note" style="margin-top:10px">แตะที่เดือนเพื่อกรอกหรือแก้ไข ตัวเลขบันทึกให้อัตโนมัติ</p>`;
+  return out;
+}
+
+/* ---------- bills ---------- */
+function defaultBillKey(){
+  const k=billKey(CUR_Y,CUR_M);if(S.docs[k])return k;
+  const ks=billKeys();return ks.length?ks[ks.length-1]:k;
+}
+function vBills(){
+  if(!S.billKey)S.billKey=defaultBillKey();
+  const k=S.billKey,{y,m}=parseBK(k),d=S.docs[k];
+  const arrow=dir=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${dir<0?'M15 5l-7 7 7 7':'M9 5l7 7-7 7'}"/></svg>`;
+  let out=`<div class="mnav"><button class="iconbtn" data-act="bstep" data-d="-1" aria-label="เดือนก่อน">${arrow(-1)}</button><h2>${TH_M[m-1]} ${y}</h2><button class="iconbtn" data-act="bstep" data-d="1" aria-label="เดือนถัดไป">${arrow(1)}</button></div>`;
+  if(!d){
+    const src=billKeys().filter(x=>x<k).pop();
+    const sl=src?parseBK(src):null;
+    return out+`<div class="empty"><p>ยังไม่มีรายการค่าใช้จ่ายของเดือนนี้</p><div class="btns">${src?`<button class="btn primary" data-act="bcopy" data-src="${src}">คัดลอกรายการจาก ${TH_MS[sl.m-1]} ${sl.y}</button>`:''}<button class="btn" data-act="bnew">เริ่มรายการว่าง</button></div>${src?'<p class="muted" style="margin:12px 0 0;font-size:.85rem">ยอดเงินจะคัดลอกมาด้วย และทุกรายการจะเริ่มเป็นยังไม่จ่าย</p>':''}</div>`;
+  }
+  const s=billSum(d),p=s.total?s.paid/s.total*100:0;
+  out+=`<div class="bsum"><div><small>ทั้งหมด</small><b class="num">${fmt(s.total,2)}</b></div><div><small>จ่ายแล้ว</small><b class="num">${fmt(s.paid,2)}</b></div><div class="left${s.left===0?' zero':''}"><small>ค้างจ่าย</small><b class="num">${fmt(s.left,2)}</b></div></div>
+  <div class="prog" role="progressbar" aria-valuenow="${Math.round(p)}" aria-valuemin="0" aria-valuemax="100" aria-label="จ่ายไปแล้ว ${Math.round(p)}%"><span style="width:${p.toFixed(1)}%"></span></div>
+  <ul class="bills">`;
+  d.items.forEach((it,i)=>{
+    const a=num(it.amount),pd=num(it.paid);
+    const st=a<=0&&pd<=0?'blank':(pd>=a&&a>0?'paid':(pd>0?'part':''));
+    out+=`<li class="bill ${st}"><button class="chk" data-act="paid" data-i="${i}" aria-pressed="${st==='paid'}" aria-label="จ่ายแล้ว ${esc(it.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><input class="name" data-act="bname" data-i="${i}" value="${esc(it.name)}" aria-label="ชื่อรายการ" autocomplete="off"><input class="in amt num" inputmode="decimal" data-act="bamt" data-i="${i}" value="${esc(raw(it.amount))}" placeholder="0" aria-label="ยอดเงิน ${esc(it.name)}" autocomplete="off"><button class="del" data-act="bdel" data-i="${i}" aria-label="ลบ ${esc(it.name)}">×</button></li>`;
+  });
+  out+=`</ul><div class="row-actions"><button class="btn" data-act="badd">+ เพิ่มรายการ</button><button class="btn quiet" data-act="bremove">ลบเดือนนี้</button></div>`;
+  return out;
+}
+
+/* ---------- gigs ---------- */
+function gigsDoc(){
+  if(!S.docs.gigs)S.docs.gigs={kind:'gigs',cars:[{name:'อีซูซุ',kmpl:14,price:39.14},{name:'นิสสันมาร์ช',kmpl:20,price:38.29}],venues:[]};
+  return S.docs.gigs;
+}
+const tripCost=(km,c)=>num(c.kmpl)>0?num(km)/num(c.kmpl)*num(c.price):0;
+function perKm(c){return num(c.kmpl)>0&&num(c.price)>0?`ตกกิโลเมตรละ ฿${fmt(num(c.price)/num(c.kmpl),2)}`:'ใส่ทั้งสองช่องเพื่อคำนวณ'}
+function costHtml(v,cars){return num(v.km)?cars.map(c=>`${esc(c.name||'รถ')} ฿${fmt(tripCost(v.km,c))}`).join('<br>'):'ใส่ระยะทางเพื่อคำนวณค่าน้ำมัน'}
+function wkHtml(g){
+  const wk=g.cars.map(()=>0);let km=0;
+  g.venues.forEach(v=>{km+=num(v.km);g.cars.forEach((c,ci)=>wk[ci]+=tripCost(v.km,c))});
+  return `<span class="h">ค่าน้ำมันโดยประมาณ</span><span class="h" style="text-align:right">ต่อสัปดาห์</span><span class="h" style="text-align:right">ต่อเดือน</span>${g.cars.map((c,ci)=>`<span>${esc(c.name||'รถ')}</span><b class="num">฿${fmt(wk[ci])}</b><b class="num">฿${fmt(wk[ci]*52/12)}</b>`).join('')}<span class="muted">ระยะทางรวม</span><span class="num" style="text-align:right">${fmt(km,1)} กม.</span><span class="num" style="text-align:right">${fmt(km*52/12)} กม.</span>`;
+}
+function refreshGigCalc(){
+  const g=gigsDoc();
+  main.querySelectorAll('[data-perkm]').forEach(el=>{const c=g.cars[+el.dataset.perkm];if(c)el.textContent=perKm(c)});
+  main.querySelectorAll('[data-cost]').forEach(el=>{const v=g.venues[+el.dataset.cost];if(v)el.innerHTML=costHtml(v,g.cars)});
+  const w=document.getElementById('wk');if(w)w.innerHTML=wkHtml(g);
+}
+function vGigs(){
+  const g=gigsDoc(),cars=g.cars;
+  let out=`<h2 style="margin-top:14px">รถและราคาน้ำมัน</h2><p class="note" style="margin:-4px 0 10px">ค่าน้ำมันต่อครั้ง = ระยะทางไปกลับ ÷ กม. ต่อลิตร × ราคาน้ำมันต่อลิตร แก้ตัวเลขในช่องแล้วยอดด้านล่างเปลี่ยนทันที</p><div class="cars">`;
+  cars.forEach((c,ci)=>{
+    out+=`<div class="car"><div class="carhead"><input class="name" data-act="car" data-c="${ci}" data-f="name" value="${esc(c.name)}" aria-label="ชื่อรถ" placeholder="ชื่อรถ" autocomplete="off">${cars.length>1?`<button class="del" data-act="cdel" data-c="${ci}" aria-label="ลบ ${esc(c.name)}">×</button>`:''}</div><div class="pair"><div class="field"><label for="k${ci}">กม. ต่อลิตร</label><input id="k${ci}" class="in num" inputmode="decimal" data-act="car" data-c="${ci}" data-f="kmpl" value="${esc(raw(c.kmpl))}"></div><div class="field"><label for="p${ci}">บาท ต่อลิตร</label><input id="p${ci}" class="in num" inputmode="decimal" data-act="car" data-c="${ci}" data-f="price" value="${esc(raw(c.price))}"></div></div><p class="perkm num" data-perkm="${ci}">${perKm(c)}</p></div>`;
+  });
+  out+=`</div><div class="row-actions"><button class="btn" data-act="cadd">+ เพิ่มรถ</button></div><h2>ที่เล่นประจำ<small>ระยะทางไปกลับ</small></h2><div class="list">`;
+  g.venues.forEach((v,i)=>{
+    out+=`<div class="venue"><input class="in" data-act="ven" data-i="${i}" data-f="day" value="${esc(v.day)}" aria-label="วัน" autocomplete="off"><input class="in" data-act="ven" data-i="${i}" data-f="place" value="${esc(v.place)}" aria-label="สถานที่" autocomplete="off"><button class="del" data-act="vdel" data-i="${i}" aria-label="ลบ ${esc(v.place)}">×</button><div class="l2"><input class="in" data-act="ven" data-i="${i}" data-f="time" value="${esc(v.time)}" aria-label="เวลา" placeholder="เวลา" autocomplete="off"><input class="in km num" inputmode="decimal" data-act="ven" data-i="${i}" data-f="km" value="${esc(raw(v.km))}" aria-label="ระยะทางไปกลับ (กม.)" placeholder="กม."><span class="cost num" data-cost="${i}">${costHtml(v,cars)}</span></div></div>`;
+  });
+  if(!g.venues.length)out+='<p class="muted" style="padding:16px">ยังไม่มีที่เล่น กดเพิ่มด้านล่าง</p>';
+  out+=`</div><div class="row-actions"><button class="btn" data-act="vadd">+ เพิ่มที่เล่น</button></div>
+  <div class="wk" id="wk">${wkHtml(g)}</div>`;
+  return out;
+}
+
+/* ---------- events ---------- */
+const main=$('#main');
+main.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.tagName==='INPUT')return;
+  const a=b.dataset.act;
+  if(a==='install'){if(installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;softRender()})}return}
+  if(a==='hideinstall'){lsSet(LS.hideInstall,'1');render();return}
+  if(a==='year'){S.year=+b.dataset.y;S.openMonth=null;render()}
+  else if(a==='addyear'){
+    const ys=years(),y=ys.length?Math.max(...ys)+1:CUR_Y;
+    S.docs[incKey(y)]={kind:'income',year:y,months:Array.from({length:12},emptyMonth)};
+    Store.saveNow(incKey(y));S.year=y;S.openMonth=null;
+    if(S.view!=='income')location.hash='#income';else render();
+  }
+  else if(a==='gomonth'){S.openMonth=+b.dataset.m;location.hash='#income'}
+  else if(a==='gobill'){S.billKey=b.dataset.k}
+  else if(a==='toggle'){const i=+b.dataset.m;S.openMonth=S.openMonth===i?null:i;render();if(S.openMonth!==null){const f=document.getElementById('f-salary');if(f)f.focus({preventScroll:true})}}
+  else if(a==='bstep'){const {y,m}=parseBK(S.billKey),n=stepMonth(y,m,+b.dataset.d);S.billKey=billKey(n.y,n.m);render()}
+  else if(a==='bcopy'){
+    const src=S.docs[b.dataset.src],{y,m}=parseBK(S.billKey);
+    S.docs[S.billKey]={kind:'expense',year:y,month:m,items:src.items.map(i=>({name:i.name,amount:i.amount,paid:0}))};
+    Store.saveNow(S.billKey);render();
+  }
+  else if(a==='bnew'){const {y,m}=parseBK(S.billKey);S.docs[S.billKey]={kind:'expense',year:y,month:m,items:[{name:'',amount:null,paid:0}]};Store.saveNow(S.billKey);render();const n=main.querySelector('.bill .name');if(n)n.focus()}
+  else if(a==='paid'){
+    const d=S.docs[S.billKey],it=d.items[+b.dataset.i],amt=num(it.amount);
+    if(amt<=0){toast('ใส่ยอดเงินก่อน แล้วค่อยติ๊กว่าจ่ายแล้ว');return}
+    it.paid=num(it.paid)>=amt?0:amt;Store.saveNow(S.billKey);render();
+  }
+  else if(a==='bdel'){
+    const d=S.docs[S.billKey],i=+b.dataset.i,it=d.items[i];
+    if(!confirm(`ลบ “${it.name||'รายการนี้'}” ออกจากเดือนนี้?`))return;
+    d.items.splice(i,1);Store.saveNow(S.billKey);render();
+  }
+  else if(a==='badd'){S.docs[S.billKey].items.push({name:'',amount:null,paid:0});Store.saveNow(S.billKey);render();const ns=main.querySelectorAll('.bill .name');ns[ns.length-1]&&ns[ns.length-1].focus()}
+  else if(a==='bremove'){
+    const {y,m}=parseBK(S.billKey);
+    if(!confirm(`ลบรายการค่าใช้จ่ายทั้งหมดของ ${TH_M[m-1]} ${y}?`))return;
+    Store.remove(S.billKey);render();
+  }
+  else if(a==='cadd'){gigsDoc().cars.push({name:'',kmpl:null,price:null});Store.saveNow('gigs');render();const ns=main.querySelectorAll('.car .name');ns[ns.length-1]&&ns[ns.length-1].focus()}
+  else if(a==='cdel'){
+    const g=gigsDoc(),i=+b.dataset.c;
+    if(!confirm(`ลบ “${g.cars[i].name||'รถคันนี้'}”?`))return;
+    g.cars.splice(i,1);Store.saveNow('gigs');render();
+  }
+  else if(a==='vadd'){gigsDoc().venues.push({day:'',place:'',time:'',km:null});Store.saveNow('gigs');render();const ins=main.querySelectorAll('.venue input[data-f="day"]');ins[ins.length-1]&&ins[ins.length-1].focus()}
+  else if(a==='vdel'){
+    const g=gigsDoc(),i=+b.dataset.i;
+    if(!confirm(`ลบ “${g.venues[i].place||'ที่เล่นนี้'}”?`))return;
+    g.venues.splice(i,1);Store.saveNow('gigs');render();
+  }
+});
+main.addEventListener('input',e=>{
+  const t=e.target,a=t.dataset.act;if(!a)return;
+  if(a==='inc'){
+    const k=incKey(S.year);
+    if(!S.docs[k])S.docs[k]={kind:'income',year:S.year,months:Array.from({length:12},emptyMonth)};
+    const ms=S.docs[k].months;while(ms.length<12)ms.push(emptyMonth());
+    ms[+t.dataset.m][t.dataset.f]=parseIn(t.value);Store.save(k);
+  }else if(a==='bname'){S.docs[S.billKey].items[+t.dataset.i].name=t.value.trim();Store.save(S.billKey)}
+  else if(a==='bamt'){
+    const it=S.docs[S.billKey].items[+t.dataset.i],was=num(it.amount),full=was>0&&num(it.paid)>=was;
+    it.amount=parseIn(t.value);if(full)it.paid=num(it.amount);Store.save(S.billKey);
+  }
+  else if(a==='car'){const c=gigsDoc().cars[+t.dataset.c],f=t.dataset.f;c[f]=f==='name'?t.value.trim():parseIn(t.value);Store.save('gigs');refreshGigCalc()}
+  else if(a==='ven'){const v=gigsDoc().venues[+t.dataset.i],f=t.dataset.f;v[f]=f==='km'?parseIn(t.value):t.value.trim();Store.save('gigs');refreshGigCalc()}
+});
+main.addEventListener('change',e=>{if(e.target.dataset.act){S.needRender=true}});
+main.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.target.blur()}});
+
+function route(){const h=location.hash.slice(1);S.view=VIEWS.includes(h)?h:'overview';render();window.scrollTo(0,0)}
+window.addEventListener('hashchange',route);
+route();
+(function boot(){
+  Store.api=API_URL||lsGet(LS.api,'');
+  if(!Store.api)return showSetup();
+  let pin=null;try{pin=sessionStorage.getItem('ledger-pin')}catch(e){}
+  if(!pin)return lockApp();
+  unlocked(pin,true);
+})();
+</script>
+</body>
+</html>
