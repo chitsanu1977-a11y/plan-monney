@@ -116,7 +116,11 @@ td.pos{color:var(--ok)} td.neg{color:var(--due)}
 .irow:first-child{border-top:0}
 .ihead{display:grid;grid-template-columns:4.6em 1fr 1fr 1fr 1.2em;gap:8px;align-items:center;width:100%;padding:11px 12px;background:none;border:0;cursor:pointer;text-align:right}
 .ihead .mn{text-align:left;font-weight:500}
-.ihead .c-day{color:var(--day)} .ihead .c-night{color:var(--night)}
+.ihead .c-day{color:var(--day)} .ihead .c-night{color:var(--night)} .ihead .c-tip{color:var(--ok)}
+.field.tip label{color:var(--ok)}
+.seg-ctl{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:3px;margin-bottom:12px}
+.seg-ctl button{border:0;background:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:500;color:var(--muted)}
+.seg-ctl button[aria-pressed="true"]{background:var(--night-soft);color:var(--ink)}
 .ihead .tot{font-weight:600}
 .ihead .chev{color:var(--muted);transition:transform .15s}
 .irow.open .chev{transform:rotate(90deg)}
@@ -193,7 +197,7 @@ td.pos{color:var(--ok)} td.neg{color:var(--due)}
 body.gated #gate{display:flex;min-height:100vh;min-height:100dvh;align-items:center;justify-content:center;padding:24px 16px}
 body.gated header.top,body.gated main,body.gated nav.tabs{display:none}
 .gatebox{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;text-align:center}
-.gatebox img{align-self:center;border-radius:14px}
+.gatebox .gatelogo{align-self:center}
 .gatebox h2{margin:4px 0 0;font-size:1.25rem}
 .gatebox .field{text-align:left}
 .gatebox .field span{font-size:.82rem;color:var(--muted)}
@@ -229,7 +233,7 @@ const TH_M=['มกราคม','กุมภาพันธ์','มีนา�
 const TH_MS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const NOW=new Date(), CUR_Y=NOW.getFullYear()+543, CUR_M=NOW.getMonth()+1;
 const VIEWS=['overview','income','bills','gigs'];
-const S={docs:{},view:'overview',year:CUR_Y,billKey:null,openMonth:null,loaded:false,slow:false,error:null,backend:null,needRender:false};
+const S={incMode:'all',docs:{},view:'overview',year:CUR_Y,billKey:null,openMonth:null,loaded:false,slow:false,error:null,backend:null,needRender:false};
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -338,7 +342,7 @@ function showGate(html){
 }
 function hideGate(){document.body.classList.remove('gated');$('#gate').innerHTML=''}
 function showSetup(msg,url){
-  showGate(`<form class="gatebox" id="setupForm"><img src="icons/icon-192.png" alt="" width="64" height="64"><h2>เชื่อมต่อ Google Sheets</h2>
+  showGate(`<form class="gatebox" id="setupForm"><svg class="gatelogo" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1C1F2E"/><rect x="13" y="16" width="16" height="7" rx="1.6" fill="#EFAE3F"/><rect x="28" y="16" width="14" height="7" rx="1.6" fill="#8E94F2"/><rect x="13" y="28.5" width="15" height="7" rx="1.6" fill="#EFAE3F"/><rect x="27" y="28.5" width="22" height="7" rx="1.6" fill="#8E94F2"/><rect x="13" y="41" width="18" height="7" rx="1.6" fill="#EFAE3F"/><rect x="30" y="41" width="12" height="7" rx="1.6" fill="#8E94F2"/></svg><h2>เชื่อมต่อ Google Sheets</h2>
   <p class="muted">วาง URL ของ Apps Script Web App ที่ลงท้ายด้วย /exec และใส่ PIN ที่ตั้งไว้ใน Code.gs</p>
   <label class="field"><span>URL ของ Web App</span><input class="in" name="url" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(url??lsGet(LS.api,''))}" required></label>
   <label class="field"><span>PIN</span><input class="in pin" name="pin" type="password" inputmode="numeric" autocomplete="off" required></label>
@@ -354,7 +358,7 @@ function showSetup(msg,url){
 }
 function lockApp(msg){
   Store.pin=null;try{sessionStorage.removeItem('ledger-pin')}catch(e){}
-  showGate(`<form class="gatebox" id="pinForm"><img src="icons/icon-192.png" alt="" width="64" height="64"><h2>ใส่ PIN</h2>
+  showGate(`<form class="gatebox" id="pinForm"><svg class="gatelogo" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1C1F2E"/><rect x="13" y="16" width="16" height="7" rx="1.6" fill="#EFAE3F"/><rect x="28" y="16" width="14" height="7" rx="1.6" fill="#8E94F2"/><rect x="13" y="28.5" width="15" height="7" rx="1.6" fill="#EFAE3F"/><rect x="27" y="28.5" width="22" height="7" rx="1.6" fill="#8E94F2"/><rect x="13" y="41" width="18" height="7" rx="1.6" fill="#EFAE3F"/><rect x="30" y="41" width="12" height="7" rx="1.6" fill="#8E94F2"/></svg><h2>ใส่ PIN</h2>
   <label class="field"><span class="sr">PIN</span><input class="in pin" name="pin" type="password" inputmode="numeric" autocomplete="off" required></label>
   ${msg?`<p class="gateerr">${esc(msg)}</p>`:''}
   <button class="btn primary" type="submit">เปิดแอป</button>
@@ -506,23 +510,44 @@ function lineChart(ys){
 function vIncome(){
   const ys=years();
   if(!ys.length)return `<div class="empty" style="margin-top:16px"><p>ยังไม่มีข้อมูลรายได้</p><div class="btns"><button class="btn primary" data-act="addyear">เริ่มปี ${CUR_Y}</button></div></div>`;
-  const y=S.year,ms=monthsOf(y)||[];
-  let out=`<div style="margin:14px 0 12px">${yearChips(true)}</div><div class="list">
-  <div class="ihead cols"><span class="mn">เดือน</span><span>งานประจำ</span><span>ดนตรี</span><span>รวม</span><span></span></div>`;
-  let ts=0,tm=0,tt=0;
+  const y=S.year,ms=monthsOf(y)||[],mus=S.incMode==='music';
+  const cols=mus?['ค่าตัว','ทิป','รวมดนตรี']:['งานประจำ','ดนตรี','รวม'];
+  const cls=mus?['c-night','c-tip','tot']:['c-day','c-night','tot'];
+  let out=`<div style="margin:14px 0 10px">${yearChips(true)}</div>
+  <div class="seg-ctl" role="group" aria-label="มุมมอง"><button data-act="incmode" data-v="all" aria-pressed="${!mus}">รายได้ทั้งหมด</button><button data-act="incmode" data-v="music" aria-pressed="${mus}">ค่าตัวและทิป</button></div>
+  <div class="list"><div class="ihead cols"><span class="mn">เดือน</span>${cols.map(c=>`<span>${c}</span>`).join('')}<span></span></div>`;
+  const T=[0,0,0];let gigN=0;
   for(let i=0;i<12;i++){
     const m=ms[i]||emptyMonth(),open=S.openMonth===i,now=y===CUR_Y&&i+1===CUR_M?' now':'';
     const has=hasData(m),mu=num(m.fee)+num(m.tip);
-    ts+=num(m.salary);tm+=mu;tt+=mTotal(m);
-    out+=`<div class="irow${open?' open':''}${now}"><button class="ihead" data-act="toggle" data-m="${i}" aria-expanded="${open}"><span class="mn">${TH_MS[i]}</span><span class="num c-day">${has&&m.salary!=null?fmt(m.salary):'–'}</span><span class="num c-night">${has&&mu?fmt(mu):'–'}</span><span class="num tot">${has?fmt(mTotal(m)):'–'}</span><span class="chev" aria-hidden="true">›</span></button>`;
+    const v=mus?[m.fee,m.tip,mu]:[m.salary,mu,mTotal(m)];
+    v.forEach((x,k)=>T[k]+=num(x));
+    if(has&&mu>0)gigN++;
+    out+=`<div class="irow${open?' open':''}${now}"><button class="ihead" data-act="toggle" data-m="${i}" aria-expanded="${open}"><span class="mn">${TH_MS[i]}</span>${v.map((x,k)=>`<span class="num ${cls[k]}">${has&&num(x)?fmt(x):'–'}</span>`).join('')}<span class="chev" aria-hidden="true">›</span></button>`;
     if(open){
-      const f=(k,lab,cls)=>`<div class="field ${cls}"><label for="f-${k}">${lab}</label><input id="f-${k}" class="in num" inputmode="decimal" autocomplete="off" data-act="inc" data-m="${i}" data-f="${k}" value="${esc(raw(m[k]))}" placeholder="0"></div>`;
-      out+=`<div class="editor">${f('salary','เงินเดือน','day')}${f('fee','ค่าตัว','night')}${f('tip','ทิป','night')}${f('other','อื่นๆ','')}</div>`;
+      const f=(k,lab,c)=>`<div class="field ${c}"><label for="f-${k}">${lab}</label><input id="f-${k}" class="in num" inputmode="decimal" autocomplete="off" data-act="inc" data-m="${i}" data-f="${k}" value="${esc(raw(m[k]))}" placeholder="0"></div>`;
+      out+=`<div class="editor">${f('salary','เงินเดือน','day')}${f('fee','ค่าตัว','night')}${f('tip','ทิป','tip')}${f('other','อื่นๆ','')}</div>`;
     }
     out+='</div>';
   }
-  out+=`<div class="irow"><div class="ihead foot"><span class="mn">รวม</span><span class="num">${fmt(ts)}</span><span class="num">${fmt(tm)}</span><span class="num">${fmt(tt)}</span><span></span></div></div></div>
-  <p class="note" style="margin-top:10px">แตะที่เดือนเพื่อกรอกหรือแก้ไข ตัวเลขบันทึกให้อัตโนมัติ</p>`;
+  out+=`<div class="irow"><div class="ihead foot"><span class="mn">รวม</span>${T.map(t=>`<span class="num">${fmt(t)}</span>`).join('')}<span></span></div></div></div>`;
+  if(mus){
+    const fee=T[0],tip=T[1];
+    if(gigN){
+      let note=`ทิปรวม ฿${fmt(tip)} เฉลี่ยเดือนละ ฿${fmt(tip/gigN)} คิดเป็น ${fmt(fee+tip?tip/(fee+tip)*100:0,1)}% ของรายได้ดนตรี`;
+      const prev=monthsOf(y-1);
+      if(prev){let pt=0;ms.forEach((m,i)=>{if(hasData(m))pt+=num(prev[i]&&prev[i].tip)});if(pt)note+=` ${tip>=pt?'มากกว่า':'น้อยกว่า'}ช่วงเดียวกันของปี ${y-1} อยู่ ${fmt(Math.abs(tip-pt)/pt*100,1)}%`}
+      out+=`<p class="note" style="margin-top:10px">${note}</p>`;
+    }
+    let rows='';
+    ys.forEach(yy=>{
+      let f=0,t=0,n=0;(monthsOf(yy)||[]).forEach(m=>{if(hasData(m)&&num(m.fee)+num(m.tip)>0){f+=num(m.fee);t+=num(m.tip);n++}});
+      if(n)rows+=`<tr><td>${yy}${n<12?` <span class="muted">(${n} เดือน)</span>`:''}</td><td class="num">${fmt(f)}</td><td class="num">${fmt(t)}</td><td class="num">${fmt(t/n)}</td><td class="num">${fmt(f+t?t/(f+t)*100:0,1)}%</td></tr>`;
+    });
+    if(rows)out+=`<h2>เทียบค่าตัวและทิปรายปี</h2><div class="tbl-wrap"><table><thead><tr><th>ปี</th><th>ค่าตัว</th><th>ทิป</th><th>ทิปเฉลี่ย/เดือน</th><th>สัดส่วนทิป</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }else{
+    out+='<p class="note" style="margin-top:10px">แตะที่เดือนเพื่อกรอกหรือแก้ไข ตัวเลขบันทึกให้อัตโนมัติ</p>';
+  }
   return out;
 }
 
@@ -596,6 +621,7 @@ main.addEventListener('click',e=>{
   const a=b.dataset.act;
   if(a==='install'){if(installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;softRender()})}return}
   if(a==='hideinstall'){lsSet(LS.hideInstall,'1');render();return}
+  if(a==='incmode'){S.incMode=b.dataset.v;S.openMonth=null;render();return}
   if(a==='year'){S.year=+b.dataset.y;S.openMonth=null;render()}
   else if(a==='addyear'){
     const ys=years(),y=ys.length?Math.max(...ys)+1:CUR_Y;
