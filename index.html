@@ -209,6 +209,23 @@ body.gated header.top,body.gated main,body.gated nav.tabs{display:none}
 .banner.install{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .banner.install span{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .btn.sm{padding:5px 12px}
+.bmain{display:flex;flex-direction:column;min-width:0}
+.bstat{font-size:.78rem;color:var(--ok);padding:0 4px;line-height:1.3}
+.more{border:0;background:none;color:var(--muted);width:30px;height:30px;border-radius:6px;cursor:pointer;display:grid;place-items:center;padding:0}
+.more svg{width:16px;height:16px;transition:transform .15s}
+.bill.open .more svg{transform:rotate(90deg)}
+.more:hover{background:var(--surface-2)}
+.bpanel{grid-column:1/-1;background:var(--surface-2);border-radius:8px;padding:10px 12px;margin:2px 0 4px;display:flex;flex-direction:column;gap:8px}
+.bpanel .ttl{font-size:.8rem;color:var(--muted)}
+.pays{list-style:none;margin:0;padding:0}
+.pays li{display:grid;grid-template-columns:1fr auto 30px;align-items:center;gap:8px;padding:2px 0;font-size:.92rem}
+.payrow{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}
+.payrow .in{background:var(--surface)}
+.payrow input[type=date]{text-align:left}
+.hint{font-size:.78rem;color:var(--muted)}
+.okmsg{color:var(--ok);font-size:.9rem;font-weight:500}
+.btn.danger{color:var(--due);align-self:flex-start;padding-left:0}
+@media (max-width:400px){.payrow{grid-template-columns:1fr 1fr}.payrow .btn{grid-column:1/-1}}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:.9rem;z-index:30;max-width:90vw}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -556,6 +573,10 @@ function defaultBillKey(){
   const k=billKey(CUR_Y,CUR_M);if(S.docs[k])return k;
   const ks=billKeys();return ks.length?ks[ks.length-1]:k;
 }
+const paysOf=it=>Array.isArray(it.payments)?it.payments:(num(it.paid)>0?[{a:num(it.paid),d:null}]:[]);
+const setPays=(it,ps)=>{it.payments=ps;it.paid=Math.round(ps.reduce((s,p)=>s+num(p.a),0)*100)/100};
+const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const thDate=s=>{const [y,m,d]=String(s).split('-').map(Number);return y&&m&&d?`${d} ${TH_MS[m-1]} ${String(y+543).slice(-2)}`:'ไม่ระบุวันที่'};
 function vBills(){
   if(!S.billKey)S.billKey=defaultBillKey();
   const k=S.billKey,{y,m}=parseBK(k),d=S.docs[k];
@@ -571,9 +592,17 @@ function vBills(){
   <div class="prog" role="progressbar" aria-valuenow="${Math.round(p)}" aria-valuemin="0" aria-valuemax="100" aria-label="จ่ายไปแล้ว ${Math.round(p)}%"><span style="width:${p.toFixed(1)}%"></span></div>
   <ul class="bills">`;
   d.items.forEach((it,i)=>{
-    const a=num(it.amount),pd=num(it.paid);
+    const a=num(it.amount),pd=num(it.paid),open=S.openBill===i,left=Math.max(0,Math.round((a-pd)*100)/100);
     const st=a<=0&&pd<=0?'blank':(pd>=a&&a>0?'paid':(pd>0?'part':''));
-    out+=`<li class="bill ${st}"><button class="chk" data-act="paid" data-i="${i}" aria-pressed="${st==='paid'}" aria-label="จ่ายแล้ว ${esc(it.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><input class="name" data-act="bname" data-i="${i}" value="${esc(it.name)}" aria-label="ชื่อรายการ" autocomplete="off"><input class="in amt num" inputmode="decimal" data-act="bamt" data-i="${i}" value="${esc(raw(it.amount))}" placeholder="0" aria-label="ยอดเงิน ${esc(it.name)}" autocomplete="off"><button class="del" data-act="bdel" data-i="${i}" aria-label="ลบ ${esc(it.name)}">×</button></li>`;
+    const stat=st==='part'?`<span class="bstat num">จ่ายแล้ว ${fmt(pd,2)} เหลือ ${fmt(left,2)}</span>`:'';
+    out+=`<li class="bill ${st}${open?' open':''}"><button class="chk" data-act="paid" data-i="${i}" aria-pressed="${st==='paid'}" aria-label="${st==='paid'?'ยกเลิกการจ่าย':'จ่ายครบ'} ${esc(it.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button><div class="bmain"><input class="name" data-act="bname" data-i="${i}" value="${esc(it.name)}" aria-label="ชื่อรายการ" autocomplete="off">${stat}</div><input class="in amt num" inputmode="decimal" data-act="bamt" data-i="${i}" value="${esc(raw(it.amount))}" placeholder="0" aria-label="ยอดเงิน ${esc(it.name)}" autocomplete="off"><button class="more" data-act="bopen" data-i="${i}" aria-expanded="${open}" aria-label="การจ่ายของ ${esc(it.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>`;
+    if(open){
+      const ps=paysOf(it);
+      out+=`<div class="bpanel">${ps.length?`<span class="ttl">ประวัติการจ่าย</span><ul class="pays">${ps.map((p,j)=>`<li><span>${thDate(p.d)}</span><b class="num">฿${fmt(p.a,2)}</b><button class="del" data-act="pdel" data-i="${i}" data-j="${j}" aria-label="ลบการจ่ายครั้งนี้">×</button></li>`).join('')}</ul>`:'<span class="ttl">ยังไม่มีการจ่าย</span>'}
+      ${a<=0?'<p class="hint">ใส่ยอดเงินของรายการนี้ก่อน แล้วค่อยบันทึกการจ่าย</p>':left>0?`<div class="payrow"><input class="in num" id="payAmt" inputmode="decimal" placeholder="${fmt(left,2)}" aria-label="จำนวนที่จ่าย" autocomplete="off"><input class="in" id="payDate" type="date" value="${todayISO()}" aria-label="วันที่จ่าย"><button class="btn primary" data-act="padd" data-i="${i}">บันทึกการจ่าย</button></div><p class="hint">เว้นช่องจำนวนไว้ = จ่ายส่วนที่เหลือทั้งหมด ฿${fmt(left,2)}</p>`:'<p class="okmsg">จ่ายครบแล้ว</p>'}
+      <button class="btn quiet danger" data-act="bdel" data-i="${i}">ลบรายการนี้</button></div>`;
+    }
+    out+='</li>';
   });
   out+=`</ul><div class="row-actions"><button class="btn" data-act="badd">+ เพิ่มรายการ</button><button class="btn quiet" data-act="bremove">ลบเดือนนี้</button></div>`;
   return out;
@@ -632,7 +661,7 @@ main.addEventListener('click',e=>{
   else if(a==='gomonth'){S.openMonth=+b.dataset.m;location.hash='#income'}
   else if(a==='gobill'){S.billKey=b.dataset.k}
   else if(a==='toggle'){const i=+b.dataset.m;S.openMonth=S.openMonth===i?null:i;render();if(S.openMonth!==null){const f=document.getElementById('f-salary');if(f)f.focus({preventScroll:true})}}
-  else if(a==='bstep'){const {y,m}=parseBK(S.billKey),n=stepMonth(y,m,+b.dataset.d);S.billKey=billKey(n.y,n.m);render()}
+  else if(a==='bstep'){const {y,m}=parseBK(S.billKey),n=stepMonth(y,m,+b.dataset.d);S.billKey=billKey(n.y,n.m);S.openBill=null;render()}
   else if(a==='bcopy'){
     const src=S.docs[b.dataset.src],{y,m}=parseBK(S.billKey);
     S.docs[S.billKey]={kind:'expense',year:y,month:m,items:src.items.map(i=>({name:i.name,amount:i.amount,paid:0}))};
@@ -642,12 +671,30 @@ main.addEventListener('click',e=>{
   else if(a==='paid'){
     const d=S.docs[S.billKey],it=d.items[+b.dataset.i],amt=num(it.amount);
     if(amt<=0){toast('ใส่ยอดเงินก่อน แล้วค่อยติ๊กว่าจ่ายแล้ว');return}
-    it.paid=num(it.paid)>=amt?0:amt;Store.saveNow(S.billKey);render();
+    const ps=paysOf(it),pd=num(it.paid);
+    if(pd>=amt){if(ps.length>1&&!confirm(`ล้างการจ่ายทั้งหมด ${ps.length} ครั้งของ “${it.name}”?`))return;setPays(it,[])}
+    else setPays(it,[...ps,{a:Math.round((amt-pd)*100)/100,d:todayISO()}]);
+    Store.saveNow(S.billKey);render();
+  }
+  else if(a==='bopen'){const i=+b.dataset.i;S.openBill=S.openBill===i?null:i;render()}
+  else if(a==='padd'){
+    const it=S.docs[S.billKey].items[+b.dataset.i],amt=num(it.amount),pd=num(it.paid),left=Math.round((amt-pd)*100)/100;
+    const el=main.querySelector('#payAmt'),dt=main.querySelector('#payDate');
+    let v=parseIn(el?el.value:'');if(v===null)v=left;
+    if(!(v>0)){toast('ใส่จำนวนเงินที่จ่าย');return}
+    if(v>left+0.004){toast(`ยอดเกินส่วนที่เหลือ ฿${fmt(left,2)}`);return}
+    setPays(it,[...paysOf(it),{a:v,d:(dt&&dt.value)||todayISO()}]);
+    Store.saveNow(S.billKey);render();toast(`บันทึกการจ่าย ฿${fmt(v,2)} แล้ว`);
+  }
+  else if(a==='pdel'){
+    const it=S.docs[S.billKey].items[+b.dataset.i],ps=[...paysOf(it)],j=+b.dataset.j;
+    if(!confirm(`ลบการจ่าย ฿${fmt(ps[j].a,2)}?`))return;
+    ps.splice(j,1);setPays(it,ps);Store.saveNow(S.billKey);render();
   }
   else if(a==='bdel'){
     const d=S.docs[S.billKey],i=+b.dataset.i,it=d.items[i];
     if(!confirm(`ลบ “${it.name||'รายการนี้'}” ออกจากเดือนนี้?`))return;
-    d.items.splice(i,1);Store.saveNow(S.billKey);render();
+    d.items.splice(i,1);S.openBill=null;Store.saveNow(S.billKey);render();
   }
   else if(a==='badd'){S.docs[S.billKey].items.push({name:'',amount:null,paid:0});Store.saveNow(S.billKey);render();const ns=main.querySelectorAll('.bill .name');ns[ns.length-1]&&ns[ns.length-1].focus()}
   else if(a==='bremove'){
@@ -678,13 +725,16 @@ main.addEventListener('input',e=>{
   }else if(a==='bname'){S.docs[S.billKey].items[+t.dataset.i].name=t.value.trim();Store.save(S.billKey)}
   else if(a==='bamt'){
     const it=S.docs[S.billKey].items[+t.dataset.i],was=num(it.amount),full=was>0&&num(it.paid)>=was;
-    it.amount=parseIn(t.value);if(full)it.paid=num(it.amount);Store.save(S.billKey);
+    it.amount=parseIn(t.value);
+    const ps=paysOf(it);
+    if(full&&ps.length<=1)setPays(it,num(it.amount)>0?[{a:num(it.amount),d:(ps[0]&&ps[0].d)||todayISO()}]:[]);
+    Store.save(S.billKey);
   }
   else if(a==='car'){const c=gigsDoc().cars[+t.dataset.c],f=t.dataset.f;c[f]=f==='name'?t.value.trim():parseIn(t.value);Store.save('gigs');refreshGigCalc()}
   else if(a==='ven'){const v=gigsDoc().venues[+t.dataset.i],f=t.dataset.f;v[f]=f==='km'?parseIn(t.value):t.value.trim();Store.save('gigs');refreshGigCalc()}
 });
 main.addEventListener('change',e=>{if(e.target.dataset.act){S.needRender=true}});
-main.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.target.blur()}});
+main.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){if(e.target.id==='payAmt'){e.preventDefault();const p=main.querySelector('[data-act=padd]');if(p)p.click();return}e.target.blur()}});
 
 function route(){const h=location.hash.slice(1);S.view=VIEWS.includes(h)?h:'overview';render();window.scrollTo(0,0)}
 window.addEventListener('hashchange',route);
